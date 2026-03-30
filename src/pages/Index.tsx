@@ -167,6 +167,9 @@ const Index = () => {
                         ★ {movie.rating}
                       </Badge>
                     </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {movie.budget ? `$${movie.budget.toLocaleString()}` : "—"}
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {movie.genre.split(",").map((g) => (
