@@ -155,7 +155,7 @@ const Index = () => {
                   <TableRow key={movie.id}>
                     <TableCell className="font-medium text-muted-foreground">{movie.rank}</TableCell>
                     <TableCell>
-                      <MoviePoster title={movie.name} year={movie.year} />
+                      <MoviePoster movieId={movie.id} title={movie.name} />
                     </TableCell>
                     <TableCell className="font-medium">{movie.name}</TableCell>
                     <TableCell>{movie.year}</TableCell>
