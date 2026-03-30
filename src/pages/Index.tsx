@@ -142,14 +142,14 @@ const Index = () => {
               {isLoading ? (
                 Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={i}>
-                    {Array.from({ length: 7 }).map((_, j) => (
+                {Array.from({ length: 8 }).map((_, j) => (
                       <TableCell key={j}><div className="h-4 w-20 animate-pulse rounded bg-muted" /></TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
                     No movies found.
                   </TableCell>
                 </TableRow>
