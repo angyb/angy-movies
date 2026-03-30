@@ -117,6 +117,7 @@ const Index = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-16">#</TableHead>
+                <TableHead className="w-16">Poster</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead
                   className="cursor-pointer select-none"
