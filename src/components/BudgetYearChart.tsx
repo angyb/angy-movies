@@ -115,7 +115,10 @@ const BudgetYearChart = ({ data }: BudgetYearChartProps) => {
       .style("font-size", "12px")
       .style("box-shadow", "0 4px 12px rgba(0,0,0,0.15)")
       .style("opacity", 0)
-      .style("z-index", 10);
+      .style("z-index", 10)
+      .style("max-width", "300px")
+      .style("max-height", "280px")
+      .style("overflow-y", "auto");
 
     // Bars
     svg
