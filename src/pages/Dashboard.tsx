@@ -16,7 +16,7 @@ const Dashboard = () => {
 
   const budgetData = movies
     .filter((m) => m.budget != null && m.budget > 0)
-    .map((m) => ({ name: m.name, year: m.year, budget: m.budget! }));
+    .map((m) => ({ name: m.name, year: m.year, budget: m.budget!, genre: m.genre }));
 
   return (
     <div className="min-h-screen bg-background">
