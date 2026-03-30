@@ -1,5 +1,6 @@
 import AppNav from "@/components/AppNav";
 import BudgetYearChart from "@/components/BudgetYearChart";
+import BudgetTreemap from "@/components/BudgetTreemap";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
