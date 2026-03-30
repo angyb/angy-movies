@@ -2,8 +2,21 @@ import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 
 interface BudgetYearChartProps {
-  data: { name: string; year: number; budget: number }[];
+  data: { name: string; year: number; budget: number; genre: string }[];
 }
+
+const GENRE_COLORS = [
+  "hsl(var(--primary))",
+  "hsl(var(--accent))",
+  "hsl(260, 50%, 45%)",
+  "hsl(200, 60%, 50%)",
+  "hsl(150, 50%, 45%)",
+  "hsl(30, 70%, 55%)",
+  "hsl(340, 55%, 55%)",
+  "hsl(180, 45%, 45%)",
+  "hsl(60, 55%, 48%)",
+  "hsl(280, 40%, 55%)",
+];
 
 const BudgetYearChart = ({ data }: BudgetYearChartProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -15,94 +28,78 @@ const BudgetYearChart = ({ data }: BudgetYearChartProps) => {
     const containerWidth = containerRef.current.clientWidth;
     const width = containerWidth;
     const height = 500;
-    const margin = { top: 20, right: 30, bottom: 60, left: 80 };
+    const margin = { top: 20, right: 180, bottom: 60, left: 80 };
+
+    // Extract primary genre for each movie
+    const withGenre = data.map((d) => ({
+      ...d,
+      primaryGenre: d.genre.split(",")[0].trim(),
+    }));
+
+    // Get top genres by count, group the rest as "Other"
+    const genreCounts = d3.rollup(withGenre, (v) => v.length, (d) => d.primaryGenre);
+    const sortedGenres = [...genreCounts.entries()].sort((a, b) => b[1] - a[1]);
+    const topGenres = sortedGenres.slice(0, 8).map(([g]) => g);
+    const allGenres = [...topGenres, "Other"];
+
+    const processed = withGenre.map((d) => ({
+      ...d,
+      displayGenre: topGenres.includes(d.primaryGenre) ? d.primaryGenre : "Other",
+    }));
+
+    // Create year bins (decades)
+    const yearExtent = d3.extent(processed, (d) => d.year) as [number, number];
+    const decadeStart = Math.floor(yearExtent[0] / 10) * 10;
+    const decadeEnd = Math.ceil((yearExtent[1] + 1) / 10) * 10;
+    const decades: [number, number][] = [];
+    for (let y = decadeStart; y < decadeEnd; y += 10) {
+      decades.push([y, y + 10]);
+    }
+
+    // Aggregate budget by decade and genre
+    const stackData = decades.map(([start, end]) => {
+      const label = `${start}s`;
+      const row: Record<string, number | string> = { decade: label, decadeStart: start };
+      allGenres.forEach((g) => {
+        row[g] = d3.sum(
+          processed.filter((d) => d.year >= start && d.year < end && d.displayGenre === g),
+          (d) => d.budget
+        );
+      });
+      return row;
+    });
+
+    const stack = d3.stack<Record<string, number | string>>().keys(allGenres);
+    const series = stack(stackData as any);
 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
     svg.attr("width", width).attr("height", height);
 
     const x = d3
-      .scaleLinear()
-      .domain(d3.extent(data, (d) => d.year) as [number, number])
-      .range([margin.left, width - margin.right]);
+      .scaleBand()
+      .domain(stackData.map((d) => d.decade as string))
+      .range([margin.left, width - margin.right])
+      .padding(0.2);
 
+    const yMax = d3.max(series, (s) => d3.max(s, (d) => d[1])) || 0;
     const y = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.budget)!])
+      .domain([0, yMax])
       .nice()
       .range([height - margin.bottom, margin.top]);
+
+    const color = d3.scaleOrdinal<string>().domain(allGenres).range(GENRE_COLORS);
 
     // Gridlines
     svg
       .append("g")
-      .attr("class", "grid")
-      .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(
-        d3.axisBottom(x).tickSize(-(height - margin.top - margin.bottom)).tickFormat(() => "")
-      )
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(d3.axisLeft(y).tickSize(-(width - margin.left - margin.right)).tickFormat(() => ""))
       .selectAll("line")
       .attr("stroke", "hsl(var(--border))")
       .attr("stroke-opacity", 0.5);
-
-    svg
-      .append("g")
-      .attr("class", "grid")
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(
-        d3.axisLeft(y).tickSize(-(width - margin.left - margin.right)).tickFormat(() => "")
-      )
-      .selectAll("line")
-      .attr("stroke", "hsl(var(--border))")
-      .attr("stroke-opacity", 0.5);
-
-    // Remove grid domain lines
-    svg.selectAll(".grid .domain").remove();
-
-    // X axis
-    svg
-      .append("g")
-      .attr("transform", `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).tickFormat(d3.format("d")))
-      .attr("color", "hsl(var(--muted-foreground))")
-      .selectAll("text")
-      .attr("fill", "hsl(var(--muted-foreground))");
-
-    // Y axis
-    svg
-      .append("g")
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(
-        d3.axisLeft(y).tickFormat((d) => {
-          const val = d as number;
-          if (val >= 1_000_000_000) return `$${(val / 1_000_000_000).toFixed(1)}B`;
-          if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(0)}M`;
-          if (val >= 1_000) return `$${(val / 1_000).toFixed(0)}K`;
-          return `$${val}`;
-        })
-      )
-      .attr("color", "hsl(var(--muted-foreground))")
-      .selectAll("text")
-      .attr("fill", "hsl(var(--muted-foreground))");
-
-    // Axis labels
-    svg
-      .append("text")
-      .attr("x", width / 2)
-      .attr("y", height - 10)
-      .attr("text-anchor", "middle")
-      .attr("fill", "hsl(var(--muted-foreground))")
-      .attr("font-size", "13px")
-      .text("Year");
-
-    svg
-      .append("text")
-      .attr("x", -(height / 2))
-      .attr("y", 20)
-      .attr("text-anchor", "middle")
-      .attr("transform", "rotate(-90)")
-      .attr("fill", "hsl(var(--muted-foreground))")
-      .attr("font-size", "13px")
-      .text("Budget (USD)");
+    svg.selectAll(".domain").remove();
 
     // Tooltip
     const tooltip = d3
@@ -120,36 +117,105 @@ const BudgetYearChart = ({ data }: BudgetYearChartProps) => {
       .style("opacity", 0)
       .style("z-index", 10);
 
-    // Dots
+    // Bars
     svg
-      .selectAll("circle")
-      .data(data)
-      .join("circle")
-      .attr("cx", (d) => x(d.year))
-      .attr("cy", (d) => y(d.budget))
-      .attr("r", 5)
-      .attr("fill", "hsl(var(--primary))")
-      .attr("fill-opacity", 0.7)
-      .attr("stroke", "hsl(var(--primary))")
-      .attr("stroke-width", 1.5)
+      .append("g")
+      .selectAll("g")
+      .data(series)
+      .join("g")
+      .attr("fill", (d) => color(d.key))
+      .selectAll("rect")
+      .data((d) => d.map((v) => ({ ...v, key: d.key })))
+      .join("rect")
+      .attr("x", (d) => x(d.data.decade as string)!)
+      .attr("y", (d) => y(d[1]))
+      .attr("height", (d) => y(d[0]) - y(d[1]))
+      .attr("width", x.bandwidth())
+      .attr("rx", 2)
+      .attr("opacity", 0.85)
       .on("mouseenter", function (event, d) {
-        d3.select(this).attr("r", 8).attr("fill-opacity", 1);
+        d3.select(this).attr("opacity", 1);
+        const val = d[1] - d[0];
         tooltip
           .style("opacity", 1)
           .html(
-            `<strong>${d.name}</strong><br/>Year: ${d.year}<br/>Budget: $${d.budget.toLocaleString()}`
+            `<strong>${d.data.decade}</strong><br/>${d.key}: $${val.toLocaleString()}`
           );
       })
       .on("mousemove", function (event) {
         const [mx, my] = d3.pointer(event, containerRef.current);
-        tooltip
-          .style("left", `${mx + 15}px`)
-          .style("top", `${my - 10}px`);
+        tooltip.style("left", `${mx + 15}px`).style("top", `${my - 10}px`);
       })
       .on("mouseleave", function () {
-        d3.select(this).attr("r", 5).attr("fill-opacity", 0.7);
+        d3.select(this).attr("opacity", 0.85);
         tooltip.style("opacity", 0);
       });
+
+    // X axis
+    svg
+      .append("g")
+      .attr("transform", `translate(0,${height - margin.bottom})`)
+      .call(d3.axisBottom(x))
+      .attr("color", "hsl(var(--muted-foreground))")
+      .selectAll("text")
+      .attr("fill", "hsl(var(--muted-foreground))");
+
+    // Y axis
+    svg
+      .append("g")
+      .attr("transform", `translate(${margin.left},0)`)
+      .call(
+        d3.axisLeft(y).tickFormat((d) => {
+          const val = d as number;
+          if (val >= 1_000_000_000) return `$${(val / 1_000_000_000).toFixed(1)}B`;
+          if (val >= 1_000_000) return `$${(val / 1_000_000).toFixed(0)}M`;
+          return `$${val}`;
+        })
+      )
+      .attr("color", "hsl(var(--muted-foreground))")
+      .selectAll("text")
+      .attr("fill", "hsl(var(--muted-foreground))");
+
+    // Axis labels
+    svg
+      .append("text")
+      .attr("x", (margin.left + width - margin.right) / 2)
+      .attr("y", height - 10)
+      .attr("text-anchor", "middle")
+      .attr("fill", "hsl(var(--muted-foreground))")
+      .attr("font-size", "13px")
+      .text("Decade");
+
+    svg
+      .append("text")
+      .attr("x", -(height / 2))
+      .attr("y", 20)
+      .attr("text-anchor", "middle")
+      .attr("transform", "rotate(-90)")
+      .attr("fill", "hsl(var(--muted-foreground))")
+      .attr("font-size", "13px")
+      .text("Total Budget (USD)");
+
+    // Legend
+    const legend = svg
+      .append("g")
+      .attr("transform", `translate(${width - margin.right + 20}, ${margin.top})`);
+
+    allGenres.forEach((genre, i) => {
+      const g = legend.append("g").attr("transform", `translate(0, ${i * 22})`);
+      g.append("rect")
+        .attr("width", 14)
+        .attr("height", 14)
+        .attr("rx", 3)
+        .attr("fill", color(genre))
+        .attr("opacity", 0.85);
+      g.append("text")
+        .attr("x", 20)
+        .attr("y", 11)
+        .attr("fill", "hsl(var(--muted-foreground))")
+        .attr("font-size", "12px")
+        .text(genre);
+    });
 
     return () => {
       tooltip.remove();
@@ -157,7 +223,7 @@ const BudgetYearChart = ({ data }: BudgetYearChartProps) => {
   }, [data]);
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className="relative w-full overflow-x-auto">
       <svg ref={svgRef} className="w-full" />
     </div>
   );
