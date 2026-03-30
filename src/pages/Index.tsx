@@ -133,6 +133,7 @@ const Index = () => {
                 >
                   <span className="inline-flex items-center">Rating <SortIcon field="rating" /></span>
                 </TableHead>
+                <TableHead>Budget</TableHead>
                 <TableHead>Genre</TableHead>
                 <TableHead className="hidden md:table-cell">Director</TableHead>
               </TableRow>
