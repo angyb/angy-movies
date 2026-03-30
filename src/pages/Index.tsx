@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, Film } from "lucide-react";
+import MoviePoster from "@/components/MoviePoster";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -116,6 +117,7 @@ const Index = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-16">#</TableHead>
+                <TableHead className="w-16">Poster</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead
                   className="cursor-pointer select-none"
@@ -137,14 +139,14 @@ const Index = () => {
               {isLoading ? (
                 Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={i}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 7 }).map((_, j) => (
                       <TableCell key={j}><div className="h-4 w-20 animate-pulse rounded bg-muted" /></TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                     No movies found.
                   </TableCell>
                 </TableRow>
@@ -152,6 +154,9 @@ const Index = () => {
                 paginated.map((movie) => (
                   <TableRow key={movie.id}>
                     <TableCell className="font-medium text-muted-foreground">{movie.rank}</TableCell>
+                    <TableCell>
+                      <MoviePoster title={movie.name} year={movie.year} />
+                    </TableCell>
                     <TableCell className="font-medium">{movie.name}</TableCell>
                     <TableCell>{movie.year}</TableCell>
                     <TableCell>
