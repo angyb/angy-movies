@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, Film } from "lucide-react";
 import MoviePoster from "@/components/MoviePoster";
+import AppNav from "@/components/AppNav";
 
 const ITEMS_PER_PAGE = 15;
 
