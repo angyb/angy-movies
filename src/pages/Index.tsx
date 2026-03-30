@@ -154,6 +154,9 @@ const Index = () => {
                 paginated.map((movie) => (
                   <TableRow key={movie.id}>
                     <TableCell className="font-medium text-muted-foreground">{movie.rank}</TableCell>
+                    <TableCell>
+                      <MoviePoster title={movie.name} year={movie.year} />
+                    </TableCell>
                     <TableCell className="font-medium">{movie.name}</TableCell>
                     <TableCell>{movie.year}</TableCell>
                     <TableCell>
