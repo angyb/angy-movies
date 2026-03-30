@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, Film } from "lucide-react";
+import MoviePoster from "@/components/MoviePoster";
 
 const ITEMS_PER_PAGE = 15;
 
