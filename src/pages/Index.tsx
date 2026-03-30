@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, Film } from "lucide-react";
 import MoviePoster from "@/components/MoviePoster";
+import AppNav from "@/components/AppNav";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -74,6 +75,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <AppNav />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
