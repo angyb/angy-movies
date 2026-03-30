@@ -1,13 +1,16 @@
 
 
-## Plan: Show Movie Titles in Stacked Bar Tooltips
+## Plan: Convert Non-USD Budgets to US Dollars
 
-Update the tooltip in `BudgetYearChart.tsx` to list all movie titles that belong to the hovered genre+decade segment.
+Update the three movies with budgets stored in their local currencies to approximate USD values using historical exchange rates.
 
-### Changes (single file: `src/components/BudgetYearChart.tsx`)
+### Data Updates (via insert tool)
 
-1. Store the `processed` array in a way accessible to the tooltip event handler (it's already in scope).
-2. In the `mouseenter` handler, filter `processed` to find movies matching the hovered decade range and genre.
-3. Update the tooltip HTML to include a list of movie titles (with their individual budgets), below the existing decade/genre/total line.
-4. Increase tooltip max-width/max-height with overflow scroll for decades with many movies.
+| Movie | Current Budget | Currency | Approx USD |
+|-------|---------------|----------|------------|
+| Princess Mononoke (1997) | 2,400,000,000 | JPY | 23,500,000 |
+| 3 Idiots (2009) | 550,000,000 | INR | 12,000,000 |
+| Seven Samurai (1954) | 125,000,000 | JPY | 350,000 |
+
+Three `UPDATE` statements against the `movies` table to set the corrected `budget` values.
 
