@@ -38,6 +38,15 @@ const Dashboard = () => {
             <BudgetYearChart data={budgetData} />
           )}
         </div>
+        <div className="rounded-lg border border-border bg-card p-6 mt-8">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Budget Treemap (by Movie Poster)</h3>
+          <p className="text-muted-foreground text-sm mb-4">Tile size represents movie budget. Hover for details.</p>
+          {isLoading ? (
+            <Skeleton className="w-full h-[500px]" />
+          ) : (
+            <BudgetTreemap movies={movies} />
+          )}
+        </div>
       </div>
     </div>
   );
