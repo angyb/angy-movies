@@ -115,7 +115,10 @@ const BudgetYearChart = ({ data }: BudgetYearChartProps) => {
       .style("font-size", "12px")
       .style("box-shadow", "0 4px 12px rgba(0,0,0,0.15)")
       .style("opacity", 0)
-      .style("z-index", 10);
+      .style("z-index", 10)
+      .style("max-width", "300px")
+      .style("max-height", "280px")
+      .style("overflow-y", "auto");
 
     // Bars
     svg
@@ -136,10 +139,20 @@ const BudgetYearChart = ({ data }: BudgetYearChartProps) => {
       .on("mouseenter", function (event, d) {
         d3.select(this).attr("opacity", 1);
         const val = d[1] - d[0];
+        const decadeLabel = d.data.decade as string;
+        const decadeStartNum = Number(d.data.decadeStart);
+        const genre = (d as any).key as string;
+        const movies = processed.filter(
+          (m) => m.year >= decadeStartNum && m.year < decadeStartNum + 10 && m.displayGenre === genre
+        );
+        const movieList = movies
+          .sort((a, b) => b.budget - a.budget)
+          .map((m) => `<div style="display:flex;justify-content:space-between;gap:8px"><span>${m.name} (${m.year})</span><span style="white-space:nowrap">$${m.budget.toLocaleString()}</span></div>`)
+          .join("");
         tooltip
           .style("opacity", 1)
           .html(
-            `<strong>${d.data.decade}</strong><br/>${d.key}: $${val.toLocaleString()}`
+            `<strong>${decadeLabel} — ${genre}</strong><br/><span style="color:hsl(var(--muted-foreground))">Total: $${val.toLocaleString()}</span><hr style="margin:4px 0;border-color:hsl(var(--border))"/>${movieList || "<em>No movies</em>"}`
           );
       })
       .on("mousemove", function (event) {
