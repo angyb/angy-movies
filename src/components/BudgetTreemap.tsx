@@ -117,6 +117,58 @@ const BudgetTreemap = ({ movies }: BudgetTreemapProps) => {
   }
 
   return (
+    <div>
+      {/* Genre filter */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <Filter className="h-3.5 w-3.5" />
+              Filter by Genre
+              {selectedGenres.length > 0 && (
+                <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-[10px]">
+                  {selectedGenres.length}
+                </Badge>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[220px] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search genres..." />
+              <CommandList>
+                <CommandEmpty>No genre found.</CommandEmpty>
+                <CommandGroup>
+                  {allGenres.map((genre) => (
+                    <CommandItem key={genre} onSelect={() => toggleGenre(genre)} className="gap-2">
+                      <Checkbox checked={selectedGenres.includes(genre)} className="pointer-events-none" />
+                      <span>{genre}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        {selectedGenres.map((genre) => (
+          <Badge key={genre} variant="secondary" className="gap-1 pr-1">
+            {genre}
+            <button
+              onClick={() => toggleGenre(genre)}
+              className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+
+        {selectedGenres.length > 0 && (
+          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedGenres([])}>
+            Clear all
+          </Button>
+        )}
+      </div>
+
     <div ref={containerRef} className="relative w-full" style={{ height: dimensions.height }}>
       {/* Treemap tiles */}
       {leaves.map((leaf) => {
