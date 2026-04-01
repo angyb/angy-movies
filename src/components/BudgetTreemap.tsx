@@ -35,6 +35,21 @@ const BudgetTreemap = ({ movies }: BudgetTreemapProps) => {
   const [hoveredMovie, setHoveredMovie] = useState<Movie | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  // Extract unique genres
+  const allGenres = useMemo(() => {
+    const genreSet = new Set<string>();
+    movies.forEach((m) => m.genre.split(",").forEach((g) => genreSet.add(g.trim())));
+    return Array.from(genreSet).sort();
+  }, [movies]);
+
+  const toggleGenre = (genre: string) => {
+    setSelectedGenres((prev) =>
+      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+    );
+  };
 
   // Observe container size
   useEffect(() => {
@@ -48,7 +63,13 @@ const BudgetTreemap = ({ movies }: BudgetTreemapProps) => {
     return () => observer.disconnect();
   }, []);
 
-  const moviesWithBudget = movies.filter((m) => m.budget && m.budget > 0);
+  const moviesWithBudget = useMemo(() => {
+    const withBudget = movies.filter((m) => m.budget && m.budget > 0);
+    if (selectedGenres.length === 0) return withBudget;
+    return withBudget.filter((m) =>
+      m.genre.split(",").some((g) => selectedGenres.includes(g.trim()))
+    );
+  }, [movies, selectedGenres]);
 
   const treemapData = d3
     .treemap<{ name: string; children: { name: string; value: number; movie: Movie }[] }>()
