@@ -1,7 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Badge } from "@/components/ui/badge";
-import { Film, Star, Clock, DollarSign, Users, Clapperboard, PenTool } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Film, Star, DollarSign, Users, Clapperboard, PenTool, Filter, X } from "lucide-react";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -31,6 +35,21 @@ const BudgetTreemap = ({ movies }: BudgetTreemapProps) => {
   const [hoveredMovie, setHoveredMovie] = useState<Movie | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  // Extract unique genres
+  const allGenres = useMemo(() => {
+    const genreSet = new Set<string>();
+    movies.forEach((m) => m.genre.split(",").forEach((g) => genreSet.add(g.trim())));
+    return Array.from(genreSet).sort();
+  }, [movies]);
+
+  const toggleGenre = (genre: string) => {
+    setSelectedGenres((prev) =>
+      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+    );
+  };
 
   // Observe container size
   useEffect(() => {
@@ -44,7 +63,13 @@ const BudgetTreemap = ({ movies }: BudgetTreemapProps) => {
     return () => observer.disconnect();
   }, []);
 
-  const moviesWithBudget = movies.filter((m) => m.budget && m.budget > 0);
+  const moviesWithBudget = useMemo(() => {
+    const withBudget = movies.filter((m) => m.budget && m.budget > 0);
+    if (selectedGenres.length === 0) return withBudget;
+    return withBudget.filter((m) =>
+      m.genre.split(",").some((g) => selectedGenres.includes(g.trim()))
+    );
+  }, [movies, selectedGenres]);
 
   const treemapData = d3
     .treemap<{ name: string; children: { name: string; value: number; movie: Movie }[] }>()
@@ -92,6 +117,58 @@ const BudgetTreemap = ({ movies }: BudgetTreemapProps) => {
   }
 
   return (
+    <div>
+      {/* Genre filter */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <Filter className="h-3.5 w-3.5" />
+              Filter by Genre
+              {selectedGenres.length > 0 && (
+                <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-[10px]">
+                  {selectedGenres.length}
+                </Badge>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[220px] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Search genres..." />
+              <CommandList>
+                <CommandEmpty>No genre found.</CommandEmpty>
+                <CommandGroup>
+                  {allGenres.map((genre) => (
+                    <CommandItem key={genre} onSelect={() => toggleGenre(genre)} className="gap-2">
+                      <Checkbox checked={selectedGenres.includes(genre)} className="pointer-events-none" />
+                      <span>{genre}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        {selectedGenres.map((genre) => (
+          <Badge key={genre} variant="secondary" className="gap-1 pr-1">
+            {genre}
+            <button
+              onClick={() => toggleGenre(genre)}
+              className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+
+        {selectedGenres.length > 0 && (
+          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedGenres([])}>
+            Clear all
+          </Button>
+        )}
+      </div>
+
     <div ref={containerRef} className="relative w-full" style={{ height: dimensions.height }}>
       {/* Treemap tiles */}
       {leaves.map((leaf) => {
@@ -232,6 +309,7 @@ const BudgetTreemap = ({ movies }: BudgetTreemapProps) => {
           )}
         </div>
       )}
+    </div>
     </div>
   );
 };
