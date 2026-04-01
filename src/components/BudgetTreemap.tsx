@@ -310,6 +310,7 @@ const BudgetTreemap = ({ movies }: BudgetTreemapProps) => {
         </div>
       )}
     </div>
+    </div>
   );
 };
 
