@@ -81,7 +81,7 @@ const Index = () => {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Film className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">IMDB Top 250 Movies</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Angy's Movie DB</h1>
           </div>
           <p className="text-muted-foreground">Browse, search, and filter the top-rated movies of all time.</p>
         </div>
